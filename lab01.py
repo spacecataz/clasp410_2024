@@ -70,7 +70,7 @@ def fire_spread(nNorth=3, nEast=3, maxiter=4, pspread=1.0):
         for i in range(nNorth):
             for j in range(nEast-1):
                 # Is current patch burning AND adjacent forested?
-                if (forest[k, i, j] == 3) & (forest[k, i, j+1] == 2):
+                if (forest[k, i, j] == 3) & (forest[k, i, j+1] == 2) & (np.random.rand() <= pspread):
                     # Spread fire to new square:
                     forest[k+1, i, j+1] = 3
 
