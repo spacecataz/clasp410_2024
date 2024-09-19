@@ -22,6 +22,21 @@ def fwd_diff(y, dx):
 
     return dydx
 
+
+def bkd_diff(y, dx):
+    '''Return backward diff approx of 1st derivative'''
+
+    # Create container for answer.
+    dydx = np.zeros(y.size)
+
+    # Backward diff:
+    dydx[1:] = (y[1:] - y[:-1]) / dx
+
+    # First point:
+    dydx[0] = (y[1] - y[0]) / dx
+
+    return dydx
+
 deltax = 0.5
 x = np.arange(0, 4*np.pi, deltax)
 
@@ -33,5 +48,6 @@ ax.plot(x, fx, '.', alpha=.6, label=r'$f(x) = \sin(x)$')
 ax.plot(x, fxd1, label=r'$f(x) = \frac{d\sin(x)}{dx}$')
 
 ax.plot(x, fwd_diff(fx, deltax), label='Fwd Diff')
+ax.plot(x, bkd_diff(fx, deltax), label='Bkwd Diff')
 
 ax.legend(loc='upper right')
