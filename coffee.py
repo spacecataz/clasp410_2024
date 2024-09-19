@@ -92,6 +92,31 @@ def time_to_temp(T_target, k=1/300., T_env=20, T_init=90):
     return (-1/k) * np.log((T_target - T_env)/(T_init - T_env))
 
 
+def newtcool(t, T0):
+    '''Return dT/dt at time t using Newton's law of cooling'''
+    return -k * (T0 - T_env)
+
+
+def euler(diffq, f0, dt, tmax=600.):
+    '''
+    Given a function representing the first derivative of f, an
+    initial condiition f0 and a timestep, dt, solve for f using
+    Euler's method.
+    '''
+
+    # Initialize!
+    t = np.arange(0.0, tmax+dt, dt)
+    f = np.zeros(t.size)
+    f[0] = f0
+
+    # Integrate!
+    for i in range(t.size-1):
+        f[i+1] = f[i] + dt * diffq(t[i], f[i])
+
+    # Return values to caller:
+    return t, f
+
+
 # Set up time array.
 time = np.arange(0, 600, 1)
 
@@ -103,12 +128,16 @@ time_scn1 = time_to_temp(60.0)   # Time to reach 60C from T_init
 temp_scn2 = solve_temp(time, T_init=85)     # Temp vs time
 time_scn2 = time_to_temp(60.0, T_init=85)   # Time to reach 60C from T_init
 
+# Get numerical approx:
+time_euler, temp_euler = euler(newtcool, 90.0, dt=10)
+
 # Plot! :)
 fig, ax = plt.subplots(1, 1)
 
 # Add temp vs. time
 ax.plot(time, temp_scn1, label='Scenario 1')
 ax.plot(time, temp_scn2, label='Scenario 2')
+ax.plot(time_euler, temp_euler, label='Euler Approx')
 
 # Add vert lines:
 ax.axvline(time_scn1, ls='--', c='C0', label=r'$t(T=60^{\circ})$')
