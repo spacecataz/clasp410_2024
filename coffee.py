@@ -117,6 +117,23 @@ def euler(diffq, f0, dt, tmax=600.):
     return t, f
 
 
+def solve_rk8(diffq, f0, dt, tmax=600.):
+    '''
+    Solve a single ODE using the Dormand Prince 8th order adaptive RK
+    method with dense output (using Scipy's `solve_ivp` function).
+
+    Arguments are the same as `euler` and yes I'm too lazy to retype this
+    right now. No judgement please.
+    '''
+
+    from scipy.integrate import solve_ivp
+
+    result = solve_ivp(diffq, [0, tmax], [f0], method='DOP853')
+
+    # Return time, function values to caller:
+    return result.t, result.y[0, :]
+
+
 # Set up time array.
 time = np.arange(0, 600, 1)
 
@@ -129,7 +146,8 @@ temp_scn2 = solve_temp(time, T_init=85)     # Temp vs time
 time_scn2 = time_to_temp(60.0, T_init=85)   # Time to reach 60C from T_init
 
 # Get numerical approx:
-time_euler, temp_euler = euler(newtcool, 90.0, dt=10)
+time_euler, temp_euler = euler(newtcool, 90.0, dt=60)
+time_rk8, temp_rk8 = solve_rk8(newtcool, 90.0, dt=60)
 
 # Plot! :)
 fig, ax = plt.subplots(1, 1)
@@ -138,6 +156,7 @@ fig, ax = plt.subplots(1, 1)
 ax.plot(time, temp_scn1, label='Scenario 1')
 ax.plot(time, temp_scn2, label='Scenario 2')
 ax.plot(time_euler, temp_euler, label='Euler Approx')
+ax.plot(time_rk8, temp_rk8, label='DOP853 Approx')
 
 # Add vert lines:
 ax.axvline(time_scn1, ls='--', c='C0', label=r'$t(T=60^{\circ})$')
