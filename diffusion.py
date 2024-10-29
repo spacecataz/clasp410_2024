@@ -64,6 +64,9 @@ def heatdiff(xmax=1, tmax=.2, dx=.2, dt=.02, c2=1, debug=True):
     for j in range(N-1):
         U[1:-1, j+1] = (1-2*r) * U[1:-1, j] + \
             r*(U[2:, j] + U[:-2, j])
+        # Set Neumann-type boundary conditions:
+        U[0, j+1] = U[1, j+1]
+        U[-1, j+1] = U[-2, j+1]
 
     # Return grid and result:
     return xgrid, tgrid, U
