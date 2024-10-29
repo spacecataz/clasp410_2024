@@ -6,8 +6,22 @@ Tools and methods for solving our heat equation/diffusion
 import numpy as np
 import matplotlib.pyplot as plt
 
+# Solution to problem 10.3 from fink/matthews
+sol10p3 = [[0.000000, 0.640000, 0.960000, 0.960000, 0.640000, 0.000000],
+           [0.000000, 0.480000, 0.800000, 0.800000, 0.480000, 0.000000],
+           [0.000000, 0.400000, 0.640000, 0.640000, 0.400000, 0.000000],
+           [0.000000, 0.320000, 0.520000, 0.520000, 0.320000, 0.000000],
+           [0.000000, 0.260000, 0.420000, 0.420000, 0.260000, 0.000000],
+           [0.000000, 0.210000, 0.340000, 0.340000, 0.210000, 0.000000],
+           [0.000000, 0.170000, 0.275000, 0.275000, 0.170000, 0.000000],
+           [0.000000, 0.137500, 0.222500, 0.222500, 0.137500, 0.000000],
+           [0.000000, 0.111250, 0.180000, 0.180000, 0.111250, 0.000000],
+           [0.000000, 0.090000, 0.145625, 0.145625, 0.090000, 0.000000],
+           [0.000000, 0.072812, 0.117813, 0.117813, 0.072812, 0.000000]]
+sol10p3 = np.array(sol10p3).transpose()
 
-def heatdiff(xmax, tmax, dx, dt, c2=1, debug=True):
+
+def heatdiff(xmax=1, tmax=.2, dx=.2, dt=.02, c2=1, debug=True):
     '''
     Parameters:
     -----------
@@ -34,7 +48,7 @@ def heatdiff(xmax, tmax, dx, dt, c2=1, debug=True):
         print(tgrid)
 
     # Initialize our data array:
-    U = np.zeros(N, M)
+    U = np.zeros([M, N])
 
     # Set initial conditions:
     U[:, 0] = 4*xgrid - 4*xgrid**2
