@@ -21,11 +21,13 @@ sol10p3 = [[0.000000, 0.640000, 0.960000, 0.960000, 0.640000, 0.000000],
 sol10p3 = np.array(sol10p3).transpose()
 
 
-def heatdiff(xmax=1, tmax=.2, dx=.2, dt=.02, c2=1, debug=True):
+def heatdiff(xmax=1, tmax=.2, dx=.2, dt=.02, c2=1, neumann=False, debug=True):
     '''
     Parameters:
     -----------
-
+    neumann : bool, defaults to False
+        Switch to Neumann boundary conditions if true where dU/dx = 0
+        Default behavior is Dirichlet where U=0 at boundaries.
 
     Returns:
     --------
@@ -65,8 +67,9 @@ def heatdiff(xmax=1, tmax=.2, dx=.2, dt=.02, c2=1, debug=True):
         U[1:-1, j+1] = (1-2*r) * U[1:-1, j] + \
             r*(U[2:, j] + U[:-2, j])
         # Set Neumann-type boundary conditions:
-        U[0, j+1] = U[1, j+1]
-        U[-1, j+1] = U[-2, j+1]
+        if neumann:
+            U[0, j+1] = U[1, j+1]
+            U[-1, j+1] = U[-2, j+1]
 
     # Return grid and result:
     return xgrid, tgrid, U
