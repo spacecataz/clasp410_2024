@@ -21,11 +21,14 @@ sol10p3 = [[0.000000, 0.640000, 0.960000, 0.960000, 0.640000, 0.000000],
 sol10p3 = np.array(sol10p3).transpose()
 
 
-def heatdiff(xmax=1, tmax=.2, dx=.2, dt=.02, c2=1, debug=True):
+def heatdiff(xmax=1, tmax=.2, dx=.2, dt=.02, c2=1, debug=False):
     '''
     Parameters:
     -----------
-
+    xmax : float, defaults to 1
+        Set the domain upper boundary location. In meters.
+    tmax : float, defaults to .2s
+        Set the domain time limit in seconds.
 
     Returns:
     --------
