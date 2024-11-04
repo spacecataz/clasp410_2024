@@ -29,13 +29,28 @@ def heatdiff(xmax=1, tmax=.2, dx=.2, dt=.02, c2=1, neumann=False, debug=False):
         Set the domain upper boundary location. In meters.
     tmax : float, defaults to .2s
         Set the domain time limit in seconds.
+    dx: int
+        The change in ground depth in m.
+    dt: int
+        The change in time step in seconds by default, measured in days
+        when the model is applied to Greenland.
+    c2: int, default=1
+        diffusivity constant, in m^2/s by default, 
+        in m2/day when the model is applied to Greenland. 
+    debug: boolean, default=False
+        Turn on debug output. 
     neumann : bool, defaults to False
         Switch to Neumann boundary conditions if true where dU/dx = 0
         Default behavior is Dirichlet where U=0 at boundaries.
 
     Returns:
     --------
-
+    xgrid: Numpy array of size M
+        Array of ground depths from 0m (at the surface) to xmax.
+    tgrid: Numpy array of size N
+        Array of times from 0 to tmax.
+    U: Numpy array of temperatures in °C.
+        Array of temperatures from the surface of the earth to at xmax.
     '''
 
     # Start by calculating size of array: MxN
@@ -44,6 +59,7 @@ def heatdiff(xmax=1, tmax=.2, dx=.2, dt=.02, c2=1, neumann=False, debug=False):
 
     xgrid, tgrid = np.arange(0, xmax+dx, dx), np.arange(0, tmax+dt, dt)
 
+    #Debugging commands utilized when debug is set to true:
     if debug:
         print(f'Our grid goes from 0 to {xmax}m and 0 to {tmax}s')
         print(f'Our spatial step is {dx} and time step is {dt}')
