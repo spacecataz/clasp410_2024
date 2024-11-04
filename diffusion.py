@@ -51,6 +51,9 @@ def heatdiff(xmax=1, tmax=.2, dx=.2, dt=.02, c2=1, neumann=False, debug=False):
         Array of times from 0 to tmax.
     U: Numpy array of temperatures in °C.
         Array of temperatures from the surface of the earth to at xmax.
+    solution_diff: Numpy array of temperatures in °C. 
+        Array of the difference in temperature of the heat diffusion solution 
+        temperature array and the Fink/Matthews solution array to problem 10.3.
     '''
 
     # Start by calculating size of array: MxN
