@@ -91,5 +91,9 @@ def heatdiff(xmax=1, tmax=.2, dx=.2, dt=.02, c2=1, neumann=False, debug=False):
             U[0, j+1] = U[1, j+1]
             U[-1, j+1] = U[-2, j+1]
 
+    #Checking to see how the temperature array compares to the transposed solution from Fink/Matthews:
+    solution_diff = U - sol10p3
     # Return grid and result:
-    return xgrid, tgrid, U
+    return xgrid, tgrid, U, solution_diff
+
+
