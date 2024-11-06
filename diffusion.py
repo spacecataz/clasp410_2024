@@ -1,6 +1,10 @@
 #1/usr/bin/env python3
 '''
 Tools and methods for solving our heat equation/diffusion
+
+To recreate the figures, run the following commands: 
+Solver Validation Temperature Difference Heat Map: run diffusion.py
+Solver Validation Heat Map: plot_heatmap(1, 0.2, 0.2, 0.02)
 '''
 
 import numpy as np
@@ -37,7 +41,7 @@ def heatdiff(xmax=1, tmax=.2, dx=.2, dt=.02, c2=1, neumann=False, debug=False):
     c2: int, default=1
         diffusivity constant, in m^2/s by default, 
         in m2/day when the model is applied to Greenland. 
-    debug: boolean, default=False
+    debug: boolean, defaults to False
         Turn on debug output. 
     neumann : bool, defaults to False
         Switch to Neumann boundary conditions if true where dU/dx = 0
@@ -51,9 +55,6 @@ def heatdiff(xmax=1, tmax=.2, dx=.2, dt=.02, c2=1, neumann=False, debug=False):
         Array of times from 0 to tmax.
     U: Numpy array of temperatures in °C.
         Array of temperatures from the surface of the earth to at xmax.
-    solution_diff: Numpy array of temperatures in °C. 
-        Array of the difference in temperature of the heat diffusion solution 
-        temperature array and the Fink/Matthews solution array to problem 10.3.
     '''
 
     # Start by calculating size of array: MxN
@@ -94,9 +95,56 @@ def heatdiff(xmax=1, tmax=.2, dx=.2, dt=.02, c2=1, neumann=False, debug=False):
             U[0, j+1] = U[1, j+1]
             U[-1, j+1] = U[-2, j+1]
 
-    #Checking to see how the temperature array compares to the transposed solution from Fink/Matthews:
-    solution_diff = U - sol10p3
     # Return grid and result:
-    return xgrid, tgrid, U, solution_diff
+    return xgrid, tgrid, U
+
+
+position_diff, time_diff, temp_diff = heatdiff(1, 0.2, 0.2, 0.02)
+#Calculating the diffrence between the Fink/Matthews solution and the temperature solution:
+#This is when the default parameters are passed into the heatdiff function.
+diff_array = temp_diff-sol10p3
+#Creating heat map plot:
+plt.clf()
+plt.pcolor(time_diff, position_diff, diff_array, shading = 'nearest')
+plt.gca().invert_yaxis()  # This will invert the y-axis
+plt.title("Solver Validation Temperature Difference Heat Map")
+plt.xlabel('Time (seconds)')
+plt.ylabel('Position (m)')
+plt.tight_layout()
+#Plotting the colorbar:
+#The temperature values are so small on the plot because the two temperature arrays have little variance:
+plt.colorbar(label='Temperature (°C)') #All values are times 10^-7
+plt.show()
+
+
+def plot_heatmap(xmax, tmax, dx, dt):
+    '''
+    Plotting the heatmap solution plot.
+    Parameters:
+    ===========
+    xmax: int
+        The maximum value of the ground depth in meters.
+    tmax: int
+        The maximum time value in seconds by default, measured in days 
+        when the model is applied to Greenland.
+    dx: int
+        The change in ground depth in m.
+    dt: int
+        The change in time step in seconds by default, measured in days
+        when the model is applied to Greenland.
+    '''
+    position, time, temp = heatdiff(xmax, tmax, dx, dt)
+    #Creating heat map plot
+    plt.clf()
+    #Only plotting every ten points in order to conserve computer memory:
+    plt.pcolor(time, position, temp, shading = 'nearest')
+    plt.gca().invert_yaxis()  # This will invert the y-axis
+    plt.title("Solver Validation Heat Map")
+    plt.xlabel('Time (seconds)')
+    plt.ylabel('Position (m)')
+    plt.tight_layout()
+    plt.colorbar(label='Temperature (°C)')
+    plt.show()
+
 
 
