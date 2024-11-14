@@ -73,7 +73,8 @@ def temp_warm(lats_in):
     return temp
 
 
-def snowball_earth(nbins=18, dt=1., tstop=10000, lam=100., debug=False):
+def snowball_earth(nbins=18, dt=1., tstop=10000, lam=100., spherecorr=True,
+                   debug=False):
     '''
     Perform snowball earth simulation.
 
@@ -87,6 +88,9 @@ def snowball_earth(nbins=18, dt=1., tstop=10000, lam=100., debug=False):
         Stop time in years
     lam : float, defaults to 100
         Diffusion coefficient of ocean in m^2/s
+    spherecorr : bool, defaults to True
+        Use the spherical coordinate correction term. This should always be
+        true except for testing purposes.
     debug : bool, defaults to False
         Turn  on or off debug print statements.
 
@@ -132,6 +136,17 @@ def snowball_earth(nbins=18, dt=1., tstop=10000, lam=100., debug=False):
     # Set boundary conditions:
     A[0, 1], A[-1, -2] = 2, 2
 
+    # Build "B" matrix for applying spherical correction:
+    B = np.zeros((nbins, nbins))
+    B[np.arange(nbins-1), np.arange(nbins-1)+1] = 1  # Set off-diag elements
+    B[np.arange(nbins-1)+1, np.arange(nbins-1)] = -1  # Set off-diag elements
+    # Set boundary conditions:
+    B[0, :], B[-1, :] = 0, 0
+
+    # Set the surface area of the "side" of each latitude ring at bin center.
+    Axz = np.pi * ((radearth+50.0)**2 - radearth**2) * np.sin(np.pi/180.*lats)
+    dAxz = np.matmul(B, Axz) / (Axz * 4 * dy**2)
+
     if debug:
         print('A = ', A)
     # Set units of A derp
@@ -144,6 +159,10 @@ def snowball_earth(nbins=18, dt=1., tstop=10000, lam=100., debug=False):
     if debug:
         print('Time integrating...')
     for i in range(nstep):
+        # Add spherical correction term:
+        if spherecorr:
+            Temp += dt_sec * lam * dAxz * np.matmul(B, Temp)
+
         Temp = np.matmul(L_inv, Temp)
 
     return lats, Temp
@@ -170,13 +189,17 @@ def test_snowball(tstop=10000):
     initial = temp_warm(lats)
 
     # Get simple diffusion solution:
-    lats, t_diff = snowball_earth(tstop=tstop, debug=True)
+    lats, t_diff = snowball_earth(tstop=tstop, spherecorr=False)
+
+    # Get diffusion + spherical correction:
+    lats, t_sphe = snowball_earth(tstop=tstop)
 
     # Create figure and plot!
     fig, ax = plt.subplots(1, 1, figsize=(8, 6))
 
     ax.plot(lats, initial, label='Warm Earth Init. Cond.')
     ax.plot(lats, t_diff, label='Simple Diffusion')
+    ax.plot(lats, t_sphe, label='Diffusion + Sphere. Corr.')
 
     ax.set_xlabel('Latitude (0=South Pole)')
     ax.set_ylabel('Temperature ($^{\circ} C$)')
