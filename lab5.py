@@ -73,7 +73,7 @@ def temp_warm(lats_in):
     return temp
 
 
-def snowball_earth(nbins=18, dt=1., tstop=10000):
+def snowball_earth(nbins=18, dt=1., tstop=10000, lam=100., debug=False):
     '''
     Perform snowball earth simulation.
 
@@ -85,6 +85,10 @@ def snowball_earth(nbins=18, dt=1., tstop=10000):
         Timestep in units of years
     tstop : float, defaults to 10,000
         Stop time in years
+    lam : float, defaults to 100
+        Diffusion coefficient of ocean in m^2/s
+    debug : bool, defaults to False
+        Turn  on or off debug print statements.
 
     Returns
     -------
@@ -93,14 +97,90 @@ def snowball_earth(nbins=18, dt=1., tstop=10000):
     Temp : Numpy array
         Final temperature as a function of latitude.
     '''
+    # Get time step in seconds:
+    dt_sec = 365 * 24 * 3600 * dt  # Years to seconds.
+
     # Generate grid:
     dlat, lats = gen_grid(nbins)
 
+    # Get grid spacing in meters.
+    dy = radearth * np.pi * dlat / 180.
+
     # Create initial condition:
     Temp = temp_warm(lats)
+    if debug:
+        print('Initial temp = ', Temp)
 
     # Get number of timesteps:
     nstep = int(tstop / dt)
 
-    # Build A and L matrices:
-    A = np.identity(nbins) * -2
+    # Debug for problem initialization
+    if debug:
+        print("DEBUG MODE!")
+        print(f"Function called for nbins={nbins}, dt={dt}, tstop={tstop}")
+        print(f"This results in nstep={nstep} time step")
+        print(f"dlat={dlat} (deg); dy = {dy} (m)")
+        print("Resulting Lat Grid:")
+        print(lats)
+
+    # Build A matrix:
+    if debug:
+        print('Building A matrix...')
+    A = np.identity(nbins) * -2  # Set diagonal elements to -2
+    A[np.arange(nbins-1), np.arange(nbins-1)+1] = 1  # Set off-diag elements
+    A[np.arange(nbins-1)+1, np.arange(nbins-1)] = 1  # Set off-diag elements
+    # Set boundary conditions:
+    A[0, 1], A[-1, -2] = 2, 2
+
+    if debug:
+        print('A = ', A)
+    # Set units of A derp
+    A /= dy**2
+
+    # Get our "L" matrix:
+    L = np.identity(nbins) - dt_sec * lam * A
+    L_inv = np.linalg.inv(L)
+
+    if debug:
+        print('Time integrating...')
+    for i in range(nstep):
+        Temp = np.matmul(L_inv, Temp)
+
+    return lats, Temp
+
+
+def test_snowball(tstop=10000):
+    '''
+    Reproduce example plot in lecture/handout.
+
+    Using our DEFAULT values (grid size, diffusion, etc.) and a warm-Earth
+    initial condition, plot:
+        - Initial condition
+        - Plot simple diffusion only
+        - Plot simple diffusion + spherical correction
+        - Plot simple diff + sphere corr + insolation
+    '''
+    nbins = 18
+
+    # Generate very simple grid
+    # Generate grid:
+    dlat, lats = gen_grid(nbins)
+
+    # Create initial condition:
+    initial = temp_warm(lats)
+
+    # Get simple diffusion solution:
+    lats, t_diff = snowball_earth(tstop=tstop, debug=True)
+
+    # Create figure and plot!
+    fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+
+    ax.plot(lats, initial, label='Warm Earth Init. Cond.')
+    ax.plot(lats, t_diff, label='Simple Diffusion')
+
+    ax.set_xlabel('Latitude (0=South Pole)')
+    ax.set_ylabel('Temperature ($^{\circ} C$)')
+
+    ax.legend(loc='best')
+
+    fig.tight_layout()
