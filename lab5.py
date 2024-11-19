@@ -127,7 +127,7 @@ def insolation(S0, lats):
 
 
 def snowball_earth(nbins=18, dt=1., tstop=10000, lam=100., spherecorr=True,
-                   debug=False):
+                   debug=False, albedo=0.3, emiss=1, S0=1370):
     '''
     Perform snowball earth simulation.
 
@@ -146,6 +146,13 @@ def snowball_earth(nbins=18, dt=1., tstop=10000, lam=100., spherecorr=True,
         true except for testing purposes.
     debug : bool, defaults to False
         Turn  on or off debug print statements.
+    albedo : float, defaults to 0.3
+        Set the Earth's albedo.
+    emiss : float, defaults to 1.0
+        Set ground emissivity. Set to zero to turn off radiative cooling.
+    S0 : float, defaults to 1370
+        Set incoming solar forcing constant. Change to zero to turn off
+        insolation.
 
     Returns
     -------
@@ -162,6 +169,9 @@ def snowball_earth(nbins=18, dt=1., tstop=10000, lam=100., spherecorr=True,
 
     # Get grid spacing in meters.
     dy = radearth * np.pi * dlat / 180.
+
+    # Generate insolation:
+    insol = insolation(S0, lats)
 
     # Create initial condition:
     Temp = temp_warm(lats)
@@ -216,6 +226,13 @@ def snowball_earth(nbins=18, dt=1., tstop=10000, lam=100., spherecorr=True,
         if spherecorr:
             Temp += dt_sec * lam * dAxz * np.matmul(B, Temp)
 
+        # Apply insolation and radiative losses:
+        # print('T before insolation:', Temp)
+        radiative = (1-albedo) * insol - emiss*sigma*(Temp+273.15)**4
+        # print('\t Rad term = ', dt_sec * radiative / (rho*C*mxdlyr))
+        Temp += dt_sec * radiative / (rho*C*mxdlyr)
+        # print('\t T after rad:', Temp)
+
         Temp = np.matmul(L_inv, Temp)
 
     return lats, Temp
@@ -242,10 +259,13 @@ def test_snowball(tstop=10000):
     initial = temp_warm(lats)
 
     # Get simple diffusion solution:
-    lats, t_diff = snowball_earth(tstop=tstop, spherecorr=False)
+    lats, t_diff = snowball_earth(tstop=tstop, spherecorr=False, S0=0, emiss=0)
 
     # Get diffusion + spherical correction:
-    lats, t_sphe = snowball_earth(tstop=tstop)
+    lats, t_sphe = snowball_earth(tstop=tstop, S0=0, emiss=0)
+
+    # Get diffusion + sphercorr + radiative terms:
+    lats, t_rad = snowball_earth(tstop=tstop)
 
     # Create figure and plot!
     fig, ax = plt.subplots(1, 1, figsize=(8, 6))
@@ -253,6 +273,7 @@ def test_snowball(tstop=10000):
     ax.plot(lats, initial, label='Warm Earth Init. Cond.')
     ax.plot(lats, t_diff, label='Simple Diffusion')
     ax.plot(lats, t_sphe, label='Diffusion + Sphere. Corr.')
+    ax.plot(lats, t_rad, label='Diffusion + Sphere. Corr. + Radiative')
 
     ax.set_xlabel('Latitude (0=South Pole)')
     ax.set_ylabel('Temperature ($^{\circ} C$)')
